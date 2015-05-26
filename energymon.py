@@ -5,7 +5,7 @@
 
 print "Meeuwenstraat Energy Monitor"
 
-import serial, atexit, Queue, threading, sys, time, re
+import serial, atexit, Queue, threading, sys, time, re, json, requests
 
 # Atexit
 def exithandler():
@@ -15,7 +15,11 @@ def exithandler():
 
 atexit.register(exithandler)
 
-# Setup serial port
+# Setup serial port and settings
+state_hist_max = 12;
+state_post_url = 'http://tomlankhorst.nl/energy/post.php';
+time_between_store = 300;
+
 ser = serial.Serial('/dev/ttyUSB0')
 ser.baudrate = 115200
 ser.bytesize=serial.EIGHTBITS
@@ -36,15 +40,31 @@ def opencomport():
 opencomport()
 
 # State archiver
+state_hist = []
+last_state_store = 0;
+
 def store_state ( state ) :
-    print state 
+    global state_hist
+    global last_state_store
+
+    if state['time'] - last_state_store < time_between_store:
+        return
+    else:
+        last_state_store = state['time']
+
+    state_hist.append(state.copy())
+    if len(state_hist) > state_hist_max:
+        state_json = json.dumps(state_hist)
+        r = requests.post(state_post_url, data={'state': state_json})
+        print r.text
+        state_hist = []
 
 
 # Reader thread
 def serial_reader():
 
     # State dict
-    state = {'energy_t1': None, 'energy_t2': None, 'power': None, 'gas': None}
+    state = {'time': None, 'energy_t1': None, 'energy_t2': None, 'power': None, 'gas': None}
 
     while True:
         line = ser.readline()
@@ -72,6 +92,7 @@ def serial_reader():
             # Used gas volume
             state['gas'] = v
             # This is the last form the list
+            state['time'] = int(time.time())
             if not None in state.values():
                 store_state( state )
 
