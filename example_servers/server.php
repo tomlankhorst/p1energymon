@@ -2,13 +2,13 @@
 # Meeuwenstraat Energy Monitor Target
 
 /** The name of the database for WordPress */
-define('DB_NAME', 'webhubhosting_tomlankhorst');
+define('DB_NAME', 'ur_dbname');
 
 /** MySQL database username */
-define('DB_USER', 'wh_tomlankhorst');
+define('DB_USER', 'ur_dbuser');
 
 /** MySQL database password */
-define('DB_PASSWORD', 'KxrjL99VJuLJrnDz');
+define('DB_PASSWORD', 'ur_pwd');
 
 /** MySQL hostname */
 define('DB_HOST', 'localhost');
